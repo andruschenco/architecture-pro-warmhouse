@@ -1,0 +1,67 @@
+@startuml
+title 'Warm house' Component Diagram
+
+top to bottom direction
+
+' !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+!include ../lib/C4_Component.puml
+
+'#### Домены (Warm House):
+'- Управление устройствами (_передача команд и информационный обмен_)
+'   - Передача управляющих команд на абонентские устройства
+'   - Мониторинг состояния и показаний абонентских устройств
+'
+'- Взаимодействие пользователей с системой
+'    - Визуализация данных (презентация телеметрии)
+'    - Ручное управление устройствами (кнопки)
+'    - Конфигурирования и настройка
+'    - Регистрация пользователей
+'    - Управление доступом пользователей (аутентификация и авторизация)
+'
+'- Управление конфигурациями (личный кабинет, группа устройств пользователя)
+'    - Планировщик (настройка сценариев, управление устройствами по расписанию, Scheduler)
+'    - Регистрация новых абонентских устройств (типовых и custom)
+'      - Отопление
+'      - Освещение
+'      - Автоматические ворота
+'      - Видеонаблюдение
+'      - Универсальный датчик
+
+' Container(ConfigurationControlContainer, "Управление конфигурациями", "Используемые технологии", "Обеспечивает управление конфигурациями устройств в том числе универсальных, а также настойка планировщиков")
+
+Container_Boundary(WarmHouse, "Warm house") {
+   Container(ConfigurationControlContainer, "Управление конфигурациями",  "Используемые технологии", "Обеспечивает управление конфигурациями устройств в том числе универсальных, \n а также настойка планировщиков")
+  Container(Queue, "Шина данных", "Используемые технологии", "Обеспечение взаимодействия между сервисами")
+  Container(Database, "Database", "PostgreSQL", "Stores user data and schedules")
+}
+
+  Container(ConfigurationControlContainer, "Управление конфигурациями____", "") {
+  Component(SchedulerController, "Планировщик (настройка сценариев, управление устройствами по расписанию)", "Handles authentication and authorization")
+  Component(AbonentController, "Регистрация новых абонентских устройств (типовых и custom)", "Manages ")
+
+'  Component(ServiceLayer, "Service Layer", "Business logic")
+'  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+'System_Ext(homeDevices, "Абонентские устройства", "Собирательный образ абонентских устройств пользователей системы")
+
+
+'Rel(AuthController,ServiceLayer,"Calls business logic")
+'Rel(UserController,ServiceLayer,"Calls business logic")
+'Rel(ScheduleController,ServiceLayer,"Calls business logic")
+'Rel(PaymentController,ServiceLayer,"Calls business logic")
+'Rel(ServiceLayer,RepositoryLayer,"Reads/Writes data")
+
+Rel(Database,AbonentController,"Профили устройств")
+Rel(AbonentController,Database,"Конфигурация устройства")
+Rel(Database,SchedulerController,"Расписание")
+Rel(SchedulerController,Queue,"Запрос на исполнение команд")
+Rel(Queue,SchedulerController,"Результат запроса")
+
+'Rel(CommandController,homeDevices,"Reads/Writes device data")
+'Rel(TelemetryController,homeDevices,"Reads/Writes device data")
+
+'CommandController <--> homeDevices : Команды управления \n результат выполнения
+'TelemetryController<--> homeDevices: Обмен данными телеметрии
+
+
+@enduml

@@ -1,0 +1,109 @@
+@startuml
+
+'Что нужно сделать
+'Идентификация сущностей: На основе анализа предметной области и спроектированных микросервисов, определите основные сущности вашей системы.
+
+'Примеры сущностей:
+'Пользователь (User)
+entity "User" {
+  * user_id : NUMBER
+  --
+  username : VARCHAR
+  email : VARCHAR
+  password : VARCHAR
+}
+
+
+'Дом (House)
+entity "House" {
+  * house_id : NUMBER
+  --
+  h_address : VARCHAR
+
+}
+
+  'id — уникальный идентификатор устройства.
+  'type_id — идентификатор типа устройства — внешний ключ к таблице DeviceType.
+  'house_id — идентификатор дома, к которому принадлежит устройство — внешний ключ к таблице House.
+  'serial_number — серийный номер устройства.
+  'status — текущее состояние устройства (включено/выключено).
+
+'Устройство (Device)
+entity "Device" {
+  * device_id : NUMBER
+  --
+  d_serial_number : VARCHAR
+  d_vendor : VARCHAR
+  d_type_id  : NUMBER
+  d_house_id: NUMBER
+  d_status: NUMBER
+}
+
+
+'Тип устройства (DeviceType)
+entity "DeviceType" {
+  * device_type_id : NUMBER
+  --
+  dt_class_id : NUMBER
+  dt_description : VARCHAR
+  dt_command_list  : VARCHAR
+}
+
+
+'Телеметрия (TelemetryData)
+entity "TelemetryData" {
+  * telemetry_data_id : NUMBER
+  --
+  td_device_id : NUMBER
+  td_event_time : DATETIME
+  td_data: VARCHAR
+}
+
+'Модуль (Module)
+
+
+'Определение атрибутов: Для каждой сущности определите необходимые атрибуты. Например:
+'Сущность «Устройство»:
+'id — уникальный идентификатор устройства.
+'type_id — идентификатор типа устройства — внешний ключ к таблице DeviceType.
+'house_id — идентификатор дома, к которому принадлежит устройство — внешний ключ к таблице House.
+'serial_number — серийный номер устройства.
+'status — текущее состояние устройства (включено/выключено).
+
+'Описание связей: Определите связи между сущностями (один-к-одному, один-ко-многим, многие-ко-многим).
+'Например:
+'Пользователь — Дом: один пользователь может иметь доступ к нескольким домам, но каждый дом связан
+'только с одним пользователем.
+'Дом — Устройство: один дом может содержать несколько устройств, и каждое устройство принадлежит
+'только одному дому.
+'Устройство — Телеметрия: одно устройство может генерировать множество записей телеметрии.
+'Построение ER-диаграммы: Используйте PlantUML для создания ER-диаграммы на основе определенных
+'сущностей, атрибутов и связей.
+
+
+House ||--o{ "Device"
+User ||--o{ House
+Device ||--o{ TelemetryData
+DeviceType ||--o{ Device
+
+
+
+'entity "Order" {
+'  * order_id : NUMBER
+'  --
+'  user_id : NUMBER
+'  order_date : DATE
+'  total : DECIMAL
+'}
+'
+'entity "Product" {
+'  * product_id : NUMBER
+'  --
+'  name : VARCHAR
+'  price : DECIMAL
+'}
+'
+'User ||--o{ Order
+'Order ||--o{ Product
+
+@enduml

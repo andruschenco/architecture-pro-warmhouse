@@ -1,0 +1,77 @@
+@startuml
+title 'Warm house' Container Diagram
+
+top to bottom direction
+
+!include ../lib/C4_Component.puml
+
+'#### Домены (Warm House):
+'- Управление устройствами (_передача команд и информационный обмен_)
+'   - Передача управляющих команд на абонентские устройства
+'   - Мониторинг состояния и показаний абонентских устройств
+'
+'- Взаимодействие пользователей с системой
+'    - Визуализация данных (презентация телеметрии)
+'    - Ручное управление устройствами (кнопки)
+'    - Конфигурирования и настройка
+'    - Регистрация пользователей
+'    - Управление доступом пользователей (аутентификация и авторизация)
+'
+'- Управление конфигурациями (личный кабинет, группа устройств пользователя)
+'    - Планировщик (настройка сценариев, управление устройствами по расписанию, Scheduler)
+'    - Регистрация новых абонентских устройств (типовых и custom)
+'      - Отопление
+'      - Освещение
+'      - Автоматические ворота
+'      - Видеонаблюдение
+'      - Универсальный датчик
+
+Person(user, "Пользователь", "Пользователь системы")
+Person(admin, "Администратор", "Помогает пользователям")
+' System(SmartHomeSystem, "Система 'Warm house'", "System managing memberships, schedules, and payments")
+System(WarmHouseSystem, "Система 'Warm house'", "Сделаем Ваш дом ближе")
+
+Container_Boundary(WarmHouseSystem, "Система 'Warm house'") {
+top to bottom direction
+
+
+rectangle #white;line:white;line.dashed;text:white  {
+    Container(UserControlContainer, "Взаимодействие пользователей с системой", "Java, Spring", "Обеспечивает все взаимодействие пользователей и администраторов с системой")
+    Container(DeviceControlContainer, "Управление устройствами", "Используемые технологии", "Обеспечение управление всеми абонентскими устройствами пользователей на основе из настроек в профилях пользователей")
+    Container(ConfigurationControlContainer, "Управление конфигурациями", "Используемые технологии", "Обеспечивает управление конфигурациями устройств в том числе универсальных, а также настойка планировщиков")
+  }
+     rectangle #white;line:white;line.dashed;text:white  {
+    Container(Queue, "Шина данных", "Используемые технологии", "Обеспечение взаимодействия между сервисами")
+    }
+
+ rectangle #white;line:white;line.dashed;text:white  {
+    Container(Database, "СУБД", "PostgreSQL", "Для хранения данных всех сервисов")
+  }
+}
+
+ rectangle #white;line:white;line.dashed;text:white  {
+     System_Ext(homeDevices, "Абонентские устройства", "Собирательный образ абонентских устройств пользователей системы")
+ }
+
+' Пользователи системы
+user <--> UserControlContainer : hello
+admin <--> UserControlContainer: hello
+
+' интерфейс для пользователей
+UserControlContainer <--> DeviceControlContainer :commands
+UserControlContainer <--> Queue
+UserControlContainer <--> ConfigurationControlContainer
+
+' Связь с СУБД
+UserControlContainer <--> Database
+ConfigurationControlContainer <--> Database
+DeviceControlContainer <--> Database
+
+' Управление устройствами
+DeviceControlContainer <--> ConfigurationControlContainer
+DeviceControlContainer <--> Queue
+DeviceControlContainer <--> homeDevices
+
+'UserProfileContainer <--> Queue
+
+@enduml

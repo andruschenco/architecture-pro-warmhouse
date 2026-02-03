@@ -1,0 +1,35 @@
+@startuml
+title Система "Warm House" (Context Diagram)
+
+top to bottom direction
+
+!include ../lib/C4_Component.puml
+
+ System_Ext(vendor, "Производители оборудования", "Производят типовые и неизвестные устройства для Warm House")
+
+rectangle users #white;line:white;line.dashed;text:white {
+    Person(user, "Пользователи", "Пользователи системы \n Smart home")
+    Person(admin, "Администраторы", "Администраторы системы \n Smart home")
+}
+
+rectangle #white;line:grey;line.dashed;text:white  {
+    System(SmartHomeSystem, "Система 'Smart home'", "Управление отоплением Вашего дома")
+}
+
+rectangle #white;line:white;line.dashed;text:white  {
+    System_Ext(home, "Абонентские устройства", "Устройства управления отоплением")
+}
+
+Rel(user, SmartHomeSystem, "Управление \n устройствами")
+Rel(SmartHomeSystem, user,"Телеметрия")
+Rel(user, SmartHomeSystem, "Регистрация \n новых устройств \n и их конфигурирование")
+
+Rel(admin, SmartHomeSystem, "Регистрация \n новых устройств")
+Rel(SmartHomeSystem, admin, "Состояние \n подключения")
+
+Rel(SmartHomeSystem, home, "Управление \n устройствами")
+Rel(home, SmartHomeSystem,"Сбор \n телеметрии")
+
+Rel(vendor, user, "Оборудование")
+
+@enduml

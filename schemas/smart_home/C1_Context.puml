@@ -1,0 +1,35 @@
+@startuml
+title Система "Smart home" (Context Diagram)
+
+!include ../lib/C4_Context.puml
+
+top to bottom direction
+
+rectangle users #white;line:white;line.dashed;text:white {
+    Person(user, "Пользователи", "Пользователи системы \n Smart home")
+    Person(admin, "Администраторы", "Администраторы системы \n Smart home")
+}
+
+rectangle #white;line:grey;line.dashed;text:white  {
+    System(SmartHomeSystem, "Система 'Smart home'", "Управление отоплением Вашего дома")
+}
+
+rectangle #white;line:white;line.dashed;text:white  {
+    System_Ext(home, "Абонентские устройства", "Устройства управления отоплением")
+}
+
+Rel(user, SmartHomeSystem, "Управление \n отоплением")
+Rel(SmartHomeSystem, user,"Мониторинг \n температуры")
+
+Rel(admin, SmartHomeSystem, "Регистрация \n новых устройств")
+Rel(SmartHomeSystem, admin, "Состояние \n подключения")
+
+Rel(SmartHomeSystem, home, "Управление \n отоплением")
+Rel(home, SmartHomeSystem,"Мониторинг \n температуры")
+
+'user <--> SmartHomeSystem :Управление отоплением, показания температуры
+'admin <--> SmartHomeSystem :Регистрация новых устройств \n Состояние подключения
+'home <--> SmartHomeSystem:Управление и телеметрия
+
+@enduml
+
