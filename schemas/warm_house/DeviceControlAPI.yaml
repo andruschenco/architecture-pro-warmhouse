@@ -1,0 +1,86 @@
+openapi: 3.0.1
+info:
+  title: Device Control API
+  version: 1.0.0
+  description: API для управления абонентскими устройствами, отправки управляющих команд.
+
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+  /devices/{device_id}/commands:
+    post:
+      summary: Отправить управляющую команду устройству
+      description: Передача команд включить, выключить или задать параметры через d_data.
+      parameters:
+        - in: path
+          name: device_id
+          schema:
+            type: integer
+          required: true
+          description: Идентификатор устройства
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  enum: [turn_on, turn_off, set_params]
+                  description: Команда для устройства
+                d_data:
+                  type: object
+                  description: дополнительные параметры или настройки (для set_params)
+                  example:
+                    param1: value1
+                    param2: value2
+      responses:
+        '200':
+          description: Удачная обработка команды
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Command executed successfully."
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        device_id:
+          type: integer
+        d_serial_number:
+          type: string
+        d_vendor:
+          type: string
+        d_type_id:
+          type: integer
+        d_house_id:
+          type: integer
+        d_status:
+          type: integer
+          description: 1 - включено, 0 - выключено
+        d_data:
+          type: object
+          description: JSON данные для настройки или команд

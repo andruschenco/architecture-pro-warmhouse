@@ -1,0 +1,90 @@
+asyncapi: '2.0.0'
+info:
+  title: Мониторинг состояния и показаний абонентских устройств
+  version: '1.0.0'
+  description: >
+    API для микросервиса, отслеживающего состояние и параметры устройств, подключенных к системе.
+servers:
+  production:
+    url: ws://api.yourdomain.com/monitoring
+    protocol: wss
+
+channels:
+  device/status/update:
+    description: Канал для обновления статуса и данных устройств
+    publish:
+      message:
+        $ref: '#/components/messages/DeviceStatusUpdate'
+
+  device/status/request:
+    description: Запрос состояния конкретного устройства
+    subscribe:
+      message:
+        $ref: '#/components/messages/DeviceStatusResponse'
+
+components:
+  messages:
+    DeviceStatusUpdate:
+      name: DeviceStatusUpdate
+      summary: Обновление статуса и данных устройства
+      payload:
+        $ref: '#/components/schemas/Device'
+
+    DeviceStatusResponse:
+      name: DeviceStatusResponse
+      summary: Ответ с текущим состоянием устройства
+      payload:
+        $ref: '#/components/schemas/Device'
+
+  schemas:
+    Device:
+      type: object
+      description: Информация о устройстве
+      properties:
+        device_id:
+          type: integer
+          description: Уникальный идентификатор устройства
+        d_serial_number:
+          type: string
+          description: Серийный номер устройства
+        d_vendor:
+          type: string
+          description: Производитель устройства
+        d_type_id:
+          type: integer
+          description: Идентификатор типа устройства
+        d_house_id:
+          type: integer
+          description: Идентификатор дома/локации
+        d_status:
+          type: integer
+          description: Статус устройства (1 - включено, 0 - выключено)
+        d_data:
+          type: object
+          description: Дополнительные данные устройства в формате JSON
+          properties: {}
+          # Допустимо расширение schema в будущем
+
+    DeviceType:
+      type: object
+      description: Тип устройства
+      properties:
+        device_type_id:
+          type: integer
+          description: Идентификатор типа устройства
+        dt_class_id:
+          type: integer
+          description: Класс устройства
+        dt_description:
+          type: string
+          description: Описание типа устройства
+        dt_command_list:
+          type: string
+          description: Список команд, поддерживаемых устройством
+
+  # Обратите внимание, что типы устройств могут быть расширены с учетом вариантов:
+  # - Отопление
+  # - Освещение
+  # - Автоматические ворота
+  # - Видеонаблюдение
+  # - Универсальный датчик

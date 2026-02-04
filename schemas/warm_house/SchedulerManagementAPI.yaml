@@ -1,0 +1,115 @@
+openapi: 3.0.1
+info:
+  title: Scheduler Management API
+  version: 1.0.0
+  description: API для управления расписанием (Scheduler)
+
+servers:
+  - url: http://localhost:8080/api
+
+components:
+  schemas:
+    Scheduler:
+      type: object
+      properties:
+        scheduler_id:
+          type: integer
+          description: Уникальный идентификатор расписания
+        sh_device_id:
+          type: integer
+          description: Идентификатор устройства, связанного с расписанием
+        sh_command:
+          type: string
+          description: Команда, которая будет выполняться по расписанию
+        sh_cron_like_pattern:
+          type: string
+          description: Cron-подобный шаблон для запуска задач
+      required:
+        - scheduler_id
+        - sh_device_id
+        - sh_command
+        - sh_cron_like_pattern
+
+  parameters:
+    schedulerId:
+      name: scheduler_id
+      in: path
+      description: ID расписания
+      required: true
+      schema:
+        type: integer
+
+paths:
+  /schedulers:
+    get:
+      summary: Получить список всех расписаний
+      responses:
+        '200':
+          description: Список расписаний
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Scheduler'
+
+    post:
+      summary: Создать новое расписание
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Scheduler'
+      responses:
+        '201':
+          description: Расписание создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scheduler'
+
+  /schedulers/{scheduler_id}:
+    get:
+      summary: Получить расписание по ID
+      parameters:
+        - $ref: '#/components/parameters/schedulerId'
+      responses:
+        '200':
+          description: Расписание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scheduler'
+        '404':
+          description: Расписание не найдено
+
+    put:
+      summary: Обновить расписание
+      parameters:
+        - $ref: '#/components/parameters/schedulerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Scheduler'
+      responses:
+        '200':
+          description: Обновлённое расписание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scheduler'
+        '404':
+          description: Расписание не найдено
+
+    delete:
+      summary: Удалить расписание
+      parameters:
+        - $ref: '#/components/parameters/schedulerId'
+      responses:
+        '204':
+          description: Расписание удалено
+        '404':
+          description: Расписание не найдено

@@ -36,7 +36,8 @@ entity "Device" {
   d_vendor : VARCHAR
   d_type_id  : NUMBER
   d_house_id: NUMBER
-  d_status: NUMBER
+  d_status: NUMBER  --  (1 - включено,0 - выключено).
+  d_data : json     -- JSON формат данных
 }
 
 
@@ -58,6 +59,16 @@ entity "TelemetryData" {
   td_event_time : DATETIME
   td_data: VARCHAR
 }
+
+'Планировщик
+entity "Scheduler" {
+  * Scheduler_id : NUMBER
+  --
+  sh_device_id : NUMBER
+  sh_command: VARCHAR
+  sh_cron_like_pattern : VARCHAR
+}
+
 
 'Модуль (Module)
 
@@ -85,6 +96,7 @@ House ||--o{ "Device"
 User ||--o{ House
 Device ||--o{ TelemetryData
 DeviceType ||--o{ Device
+Device ||--o{ Scheduler
 
 
 

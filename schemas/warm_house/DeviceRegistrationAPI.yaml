@@ -1,0 +1,144 @@
+openapi: 3.0.1
+info:
+  title: Device Registration API
+  version: 1.0.0
+  description: API для регистрации и настройки новых типовых и универсальных устройств
+
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+  /devices/register:
+    post:
+      summary: Регистрация нового устройства
+      description: Создает новую запись устройства с заданными параметрами
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreate'
+      responses:
+        '201':
+          description: Устройство успешно зарегистрировано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Некорректные параметры запроса
+
+  /devices/{device_id}:
+    get:
+      summary: Получить информацию об устройстве
+      description: Возвращает детали устройства по идентификатору
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+          description: Идентификатор устройства
+      responses:
+        '200':
+          description: Детали устройства
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Устройство не найдено
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        device_id:
+          type: integer
+          description: Уникальный идентификатор устройства
+        d_serial_number:
+          type: string
+          description: Серийный номер устройства
+        d_vendor:
+          type: string
+          description: Производитель устройства
+        d_type_id:
+          type: integer
+          description: Идентификатор типа устройства
+        d_house_id:
+          type: integer
+          description: Идентификатор дома или объекта установки
+        d_status:
+          type: integer
+          description: Статус устройства (1 - включено, 0 - выключено)
+        d_data:
+          type: object
+          description: Дополнительные данные в формате JSON
+          example: {}
+      required:
+        - device_id
+        - d_serial_number
+        - d_vendor
+        - d_type_id
+        - d_house_id
+        - d_status
+        - d_data
+
+    DeviceCreate:
+      type: object
+      properties:
+        d_serial_number:
+          type: string
+          description: Серийный номер устройства
+        d_vendor:
+          type: string
+          description: Производитель устройства
+        d_type_id:
+          type: integer
+          description: Идентификатор типа устройства
+        d_house_id:
+          type: integer
+          description: Идентификатор дома или помещения
+        d_status:
+          type: integer
+          description: Статус устройства (1 - включено, 0 - выключено)
+        d_data:
+          type: object
+          description: Дополнительные параметры в JSON
+          example: {}
+      required:
+        - d_serial_number
+        - d_vendor
+        - d_type_id
+        - d_house_id
+        - d_status
+        - d_data
+
+    DeviceType:
+      type: object
+      properties:
+        device_type_id:
+          type: integer
+          description: Идентификатор типа устройства
+        dt_class_id:
+          type: integer
+          description: Класс устройства
+        dt_description:
+          type: string
+          description: Описание типа устройства
+        dt_command_list:
+          type: string
+          description: Список команд, связанных с устройством
+      required:
+        - device_type_id
+        - dt_class_id
+        - dt_description
+        - dt_command_list
+
+# Варианты устройств
+# Отопление
+# Освещение
+# Автоматические ворота
+# Видеонаблюдение
+# Универсальный датчик
