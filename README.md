@@ -194,59 +194,144 @@
 
 # Задание 5. Работа с docker и docker-compose
 
-Перейдите в apps.
+[//]: # (Перейдите в apps.)
 
-Там находится приложение-монолит для работы с датчиками температуры. В README.md описано как запустить решение.
+[//]: # (Там находится приложение-монолит для работы с датчиками температуры. В README.md описано как запустить решение.)
+[//]: # (Вам нужно:)
 
-Вам нужно:
+[//]: # (1&#41; сделать простое приложение temperature-api на любом удобном для вас языке программирования, которое при запросе /temperature?location= будет отдавать рандомное значение температуры.)
+[//]: # (Locations - название комнаты, sensorId - идентификатор названия комнаты)
 
-1) сделать простое приложение temperature-api на любом удобном для вас языке программирования, которое при запросе /temperature?location= будет отдавать рандомное значение температуры.
+[//]: # (```)
+[//]: # (	// If no location is provided, use a default based on sensor ID)
+[//]: # (	if location == "" {)
+[//]: # (		switch sensorID {)
+[//]: # (		case "1":)
+[//]: # (			location = "Living Room")
+[//]: # (		case "2":)
+[//]: # (			location = "Bedroom")
+[//]: # (		case "3":)
+[//]: # (			location = "Kitchen")
+[//]: # (		default:)
+[//]: # (			location = "Unknown")
+[//]: # (		})
+[//]: # (	})
+[//]: # ()
+[//]: # (	// If no sensor ID is provided, generate one based on location)
+[//]: # (	if sensorID == "" {)
+[//]: # (		switch location {)
+[//]: # (		case "Living Room":)
+[//]: # (			sensorID = "1")
+[//]: # (		case "Bedroom":)
+[//]: # (			sensorID = "2")
+[//]: # (		case "Kitchen":)
+[//]: # (			sensorID = "3")
+[//]: # (		default:)
+[//]: # (			sensorID = "0")
+[//]: # (		})
+[//]: # (	})
+[//]: # (```)
 
-Locations - название комнаты, sensorId - идентификатор названия комнаты
+[//]: # (2&#41; Приложение следует упаковать в Docker и добавить в docker-compose. Порт по умолчанию должен быть 8081)
+[//]: # ()
+[//]: # (3&#41; Кроме того для smart_home приложения требуется база данных - добавьте в docker-compose файл настройки для запуска postgres с указанием скрипта инициализации ./smart_home/init.sql)
+[//]: # ()
+[//]: # (Для проверки можно использовать Postman коллекцию smarthome-api.postman_collection.json и вызвать:)
+[//]: # ()
+[//]: # (- Create Sensor)
+[//]: # (- Get All Sensors)
+[//]: # ()
+[//]: # (Должно при каждом вызове отображаться разное значение температуры)
+[//]: # ()
+[//]: # (Ревьюер будет проверять точно так же.)
 
+
+### По итогу выполнения задания 5
+##### Задание немного рассогласовано. Есть утверждение, что можно использовать Create Sensor и Get All Sensors при этом "Должно при каждом вызове отображаться разное значение температуры"
+##### Полагаю что это опечатки.
+##### Исхожу из следующей постановки:
+  - Основная задача это создать и подготовить к развертыванию сервис "Temperature API".
+  - Проверить и при необходимости наладить работу сервиса "Smart Home" в частности методов Create Sensor и Get All Sensors и обеспечить собрание результатов методов в БД 
+
+#### Как запустить сервисы и проверить работу 
+ - Запустить скрипт инициализации контейнеров init.sh из директории apps
+    ```console 
+   ./init.sh
+   ```
+ - Дождаться окончания разворачивания контейнеров (примерный результат указан ниже)
+    ```console 
+    [+] up 19/19king to docker.io/library/apps-app:latest	1.4s
+    ✔ Image postgres:16-alpine       Pulled               	27.1s
+    ✔ Image apps-temperature-api     Built                	99.7s
+    ✔ Image apps-app                 Built                	99.7s
+    ✔ Network apps_smarthome-network Created              	1.3s
+    ✔ Container temperature-api      Created              	3.2s
+    ✔ Container smarthome-postgres   Healthy              	18.3s
+    ✔ Container smarthome-app        Created              	0.3s
+    Waiting for services to be ready...
+    PostgreSQL is ready!
+    All services are up and running!
+    The API is available at http://localhost:8080
+    ```
+
+ - Команда для получения значения датчика по "расположению" 
+   ```console 
+   curl http://localhost:8081/temperature?location=livingroom
+   ```
+    _Примечание: при запросе location должен быть указан (не пуст)_
+   
+ - Команда для получения значения по "id датчика" 
+   ```console 
+    curl http://localhost:8081/temperature/24
+   ```
+ - Проверка здоровья temperature-api
+   ```console 
+   curl http://localhost:8081/health
+   ```
+ - Проверка здоровья smarthome-app
+    ```console
+    curl http://localhost:8080/health
+    ```
+ - Получение всех датчиков smarthome-app
+    ```console
+    curl http://localhost:8080/api/v1/sensors
+    ```
+ - Получение параметров датчика 2 (smarthome-app)
+    ```console
+    curl http://localhost:8080/api/v1/sensors/2
+    ```
+
+### Может пригодиться
+#### Удалить все образы, используемые сервисами Docker Compose. Для этого используется команда
+```console
+docker compose down --rmi all.
 ```
-	// If no location is provided, use a default based on sensor ID
-	if location == "" {
-		switch sensorID {
-		case "1":
-			location = "Living Room"
-		case "2":
-			location = "Bedroom"
-		case "3":
-			location = "Kitchen"
-		default:
-			location = "Unknown"
-		}
-	}
 
-	// If no sensor ID is provided, generate one based on location
-	if sensorID == "" {
-		switch location {
-		case "Living Room":
-			sensorID = "1"
-		case "Bedroom":
-			sensorID = "2"
-		case "Kitchen":
-			sensorID = "3"
-		default:
-			sensorID = "0"
-		}
-	}
+#### **Использовал для решения проблемы создания таблиц в БД**  
+#### 1. Останавливаем все контейнеры
+```console
+docker compose down
+```
+#### 2. Удаляем volume (ВНИМАНИЕ: все данные БД будут удалены!)
+```console
+docker volume rm $(docker volume ls -q | grep postgres_data)
+```
+#### ИЛИ если не хотите удалять volume, можно проверить что внутри:
+```console
+docker run -it --rm \
+-v ваш_проект_postgres_data:/data \
+alpine ls -la /data
 ```
 
-2) Приложение следует упаковать в Docker и добавить в docker-compose. Порт по умолчанию должен быть 8081
+#### 3. Запускаем с просмотром логов PostgreSQL
+```console
+docker compose up --build postgres
+```
 
-3) Кроме того для smart_home приложения требуется база данных - добавьте в docker-compose файл настройки для запуска postgres с указанием скрипта инициализации ./smart_home/init.sql
-
-Для проверки можно использовать Postman коллекцию smarthome-api.postman_collection.json и вызвать:
-
-- Create Sensor
-- Get All Sensors
-
-Должно при каждом вызове отображаться разное значение температуры
-
-Ревьюер будет проверять точно так же.
-
+#### В отдельном терминале смотрим логи:
+```console
+docker compose logs -f postgres
+```
 
 # **Задание 6. Разработка MVP**
 
