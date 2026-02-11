@@ -1,15 +1,81 @@
 @startuml
-'https://plantuml.com/sequence-diagram
+' Диаграмма класса SensorService
+' Пакет сервиса
+package com.sensor.service.service <<Frame>> {
+  ' Класс SensorService со стереотипом Spring-сервиса
+  class SensorService <<@Service>> {
+    {field} - serviceId : String
+    {field} - sensorDataMap : Map<String, SensorData>
+    {field} - locations : List<String>
+    --
+    ' Конструктор
+    + SensorService()
+    ' Инициализация датчиков
+    - initializeSensors()
+    ' Периодическое обновление значений
+    + updateSensorValues() <<@Scheduled(fixedRate=30000)>>
+    ' Методы доступа к данным
+    + getAllSensors() : List<SensorData>
+    + getSensorById(sensorId: String) : SensorData
+    + getSensorsByType(type: String) : List<SensorData>
+    + getSensorsByLocation(location: String) : List<SensorData>
+    ' Сервисная информация
+    + getServiceInfo() : Map<String, Object>
+    ' Сводка по локации
+    + getLocationSummary(location: String) : Map<String, Object>
+  }
 
-autonumber
+  ' Примечание для @Value
+  note right of SensorService::serviceId
+    @Value("${service.id}")
+    Внедряется из конфигурации
+  end note
+}
 
-== Initialization ==
+' Пакет модели
+package com.sensor.service.model <<Frame>> {
+  ' Класс данных датчика
+  class SensorData {
+    {field} - sensorId : String
+    {field} - sensorType : String
+    {field} - location : String
+    {field} - value : double
+    {field} - unit : String
+    {field} - timestamp : LocalDateTime
+    {field} - status : String
+    --
+    ' Геттеры/сеттеры (опущены для краткости)
+  }
 
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
+  ' Перечисление типов датчиков
+  enum SensorType {
+    TEMPERATURE
+    HUMIDITY
+    CO2
+    --
+    {method} + getType() : String
+    {method} + getUnit() : String
+    {method} + getMinValue() : double
+    {method} + getMaxValue() : double
+  }
+}
 
-== Repetition ==
+' Отношения
+SensorService *-- SensorData : хранит >
+SensorService --> SensorType : использует
+SensorService --> Random : <<create>>
+SensorService --> LocalDateTime
+SensorService --> UUID
+SensorService --> Arrays
+SensorService --> Collectors
+SensorService --> ConcurrentHashMap
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
+' Скрываем реализации стандартных классов (опционально)
+hide Random
+hide LocalDateTime
+hide UUID
+hide Arrays
+hide Collectors
+hide ConcurrentHashMap
+
 @enduml

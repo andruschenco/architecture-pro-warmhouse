@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 Smart Home Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title h1 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.online {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .status.offline {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+            font-family: monospace;
+        }
+
+        .temp-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2196f3;
+        }
+
+        .sensor-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .sensor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .sensor-item:hover {
+            background: #f8f9fa;
+        }
+
+        .sensor-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .sensor-location {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .sensor-temp {
+            font-weight: 600;
+            color: #2196f3;
+            font-size: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            transition: transform 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .summary-location {
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: capitalize;
+        }
+
+        .summary-temp {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .summary-range {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            color: #666;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .updating {
+            animation: pulse 1.5s infinite;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #1976d2;
+        }
+
+        .refresh-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ef9a9a;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .location-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        .sensor-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .sensor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .sensor-id {
+            font-weight: 600;
+            color: #1976d2;
+            background: #e3f2fd;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .sensor-value-large {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2196f3;
+        }
+
+        .sensor-desc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="title">
+            <h1>🏠 Smart Home Dashboard</h1>
+            <button class="refresh-btn" onclick="manualRefresh()" id="refreshBtn">
+                🔄 Refresh
+            </button>
+        </div>
+        <div class="timestamp" id="timestamp">
+            {% if data and data.timestamp %}
+            Last updated: {{ data.timestamp }}
+            {% else %}
+            Loading...
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Error message (hidden by default) -->
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+    <!-- Service Status Grid -->
+    <div class="grid">
+        <!-- Temperature API Card - ПОЛНОСТЬЮ ИСПРАВЛЕНА -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🌡️ Temperature API</span>
+                <span id="tempApiStatus" class="status {{ 'online' if data and data.services and data.services.temperature_api and data.services.temperature_api.healthy else 'offline' }}">
+                    {% if data and data.services and data.services.temperature_api and data.services.temperature_api.healthy %}
+                        Online
+                    {% else %}
+                        Offline
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Информация о сервисе -->
+            <div class="info-row">
+                <span class="info-label">Service ID:</span>
+                <span class="info-value" id="tempApiId">
+                    {% if data and data.services and data.services.temperature_api and data.services.temperature_api.info %}
+                        {{ data.services.temperature_api.info.service_id }}
+                    {% else %}
+                        temperature-api-1
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total Readings:</span>
+                <span class="info-value" id="tempApiReadings">
+                    {{ data.services.temperature_api.readings_count if data and data.services and data.services.temperature_api else 0 }}
+                </span>
+            </div>
+
+            <!-- Датчики по ID -->
+            <div style="margin-top: 15px;">
+                <div style="font-weight: 600; margin-bottom: 12px; color: #333; display: flex; align-items: center;">
+                    <span style="background: #1976d2; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-right: 8px;">ID</span>
+                    Sensors by ID
+                </div>
+                <div id="tempApiSensorList">
+                    {% if data and data.services and data.services.temperature_api and data.services.temperature_api.readings %}
+                    {% set ns = namespace(found=false) %}
+                    {% for reading in data.services.temperature_api.readings %}
+                    {% if reading.sensor_id in ['1', '2', '3'] %}
+                    {% set ns.found = true %}
+                    <div class="sensor-card">
+                        <div class="sensor-header">
+                            <span class="sensor-id">Sensor #{{ reading.sensor_id }}</span>
+                            <span style="font-size: 12px; color: #666;">{{ reading.location }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="sensor-value-large">{{ reading.value|round(1) }}°C</span>
+                            <span style="font-size: 12px; color: #666;">
+                                            {{ reading.timestamp|string|truncate(19, True, '') if reading.timestamp else 'N/A' }}
+                                        </span>
+                        </div>
+                        <div class="sensor-desc">
+                            {{ reading.description if reading.description else 'Temperature sensor in ' + reading.location }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% if not ns.found %}
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        No sensor readings available
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        No sensor readings available
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Показания по локациям -->
+            <div style="margin-top: 20px;">
+                <div style="font-weight: 600; margin-bottom: 12px; color: #333; display: flex; align-items: center;">
+                    <span style="background: #ff9800; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-right: 8px;">📍</span>
+                    Location Readings
+                </div>
+                <div id="tempApiLocationList">
+                    {% if data and data.services and data.services.temperature_api and data.services.temperature_api.readings %}
+                    {% set ns = namespace(found=false) %}
+                    {% for reading in data.services.temperature_api.readings %}
+                    {% if reading.location in ['Living Room', 'Bedroom', 'Kitchen'] and reading.sensor_id not in ['1', '2', '3'] %}
+                    {% set ns.found = true %}
+                    <div class="sensor-item">
+                        <div>
+                            <div class="sensor-name">{{ reading.location }}</div>
+                            <div class="sensor-location">
+                                🆔 Sensor: {{ reading.sensor_id }}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="sensor-temp">{{ reading.value|round(1) }}°C</span>
+                            <span style="font-size: 11px; color: #666;">
+                                            {{ reading.timestamp|string|truncate(16, True, '') if reading.timestamp else 'N/A' }}
+                                        </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% if not ns.found %}
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        No location readings available
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        No location readings available
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Доступные локации -->
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #333; font-size: 13px;">
+                    📍 Available Locations:
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="tempApiLocations">
+                    {% if data and data.services and data.services.temperature_api and data.services.temperature_api.locations %}
+                    {% for location in data.services.temperature_api.locations %}
+                    <span class="location-badge">
+                            {{ location }}
+                        </span>
+                    {% endfor %}
+                    {% else %}
+                    <span class="location-badge">Living Room</span>
+                    <span class="location-badge">Bedroom</span>
+                    <span class="location-badge">Kitchen</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Пример прямого запроса -->
+            <div style="margin-top: 15px; background: #f5f5f5; padding: 10px; border-radius: 8px;">
+                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
+                    🔍 Direct API endpoints:
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 5px; font-size: 11px;">
+                    <code style="background: #e0e0e0; padding: 2px 6px; border-radius: 4px;">/temperature/1</code>
+                    <code style="background: #e0e0e0; padding: 2px 6px; border-radius: 4px;">/temperature/2</code>
+                    <code style="background: #e0e0e0; padding: 2px 6px; border-radius: 4px;">/temperature/3</code>
+                    <code style="background: #e0e0e0; padding: 2px 6px; border-radius: 4px;">/temperature?location=Living Room</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor Service Card - БЕЗ ИЗМЕНЕНИЙ -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📊 Sensor Service</span>
+                <span id="sensorServiceStatus" class="status {{ 'online' if data and data.services and data.services.sensor_service and data.services.sensor_service.healthy else 'offline' }}">
+            {{ 'Online' if data and data.services and data.services.sensor_service and data.services.sensor_service.healthy else 'Offline' }}
+        </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Service ID:</span>
+                <span class="info-value" id="sensorServiceId">
+            {{ data.services.sensor_service.info.service_id if data and data.services and data.services.sensor_service and data.services.sensor_service.info else 'N/A' }}
+        </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Temperature Sensors:</span>
+                <span class="info-value" id="sensorTotal">
+            {{ data.services.sensor_service.sensor_count if data and data.services and data.services.sensor_service else 0 }}
+        </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total All Sensors:</span>
+                <span class="info-value">
+            {{ data.all_sensors_count if data and data.all_sensors_count else 0 }}
+        </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Sensor Types:</span>
+                <span class="info-value">
+            {{ ', '.join(data.sensor_types) if data and data.sensor_types else 'N/A' }}
+        </span>
+            </div>
+        </div>
+
+        <!-- Heating Device Card - БЕЗ ИЗМЕНЕНИЙ -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🔥 Heating Device</span>
+                <span id="heatingStatus" class="status {{ 'online' if data and data.services and data.services.heating_device and data.services.heating_device.healthy else 'offline' }}">
+                        {% if data and data.services and data.services.heating_device and data.services.heating_device.healthy %}
+                            Online
+                        {% else %}
+                            Offline
+                        {% endif %}
+                    </span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="flex: 1;">
+                    <div class="info-row">
+                        <span class="info-label">Device ID:</span>
+                        <span class="info-value" id="heatingDeviceId">
+                                {% if data and data.services and data.services.heating_device and data.services.heating_device.info %}
+                                    {{ data.services.heating_device.info.device_id }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Power:</span>
+                        <span class="info-value" id="heatingPower">
+                                {% if data and data.services and data.services.heating_device and data.services.heating_device.status %}
+                                    {{ 'ON' if data.services.heating_device.status.is_on else 'OFF' }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mode:</span>
+                        <span class="info-value" id="heatingMode">
+                                {% if data and data.services and data.services.heating_device and data.services.heating_device.info %}
+                                    {{ data.services.heating_device.info.mode }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                    </div>
+                </div>
+                <div style="text-align: center; padding-left: 20px;">
+                    <div class="temp-value" id="heatingTemp">
+                        {% if data and data.services and data.services.heating_device and data.services.heating_device.temperature %}
+                        {{ data.services.heating_device.temperature.temperature }}°C
+                        {% else %}
+                        --
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 12px; color: #666;">Setpoint</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Sensors - БЕЗ ИЗМЕНЕНИЙ -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">📍 Active Temperature Sensors</span>
+            <span class="status online" id="sensorCount">
+                    {{ data.services.sensor_service.sensor_count if data and data.services and data.services.sensor_service else 0 }} active
+                </span>
+        </div>
+        <div class="sensor-list" id="sensorList">
+            {% if data and data.services and data.services.sensor_service and data.services.sensor_service.sensors %}
+            {% for sensor in data.services.sensor_service.sensors %}
+            <div class="sensor-item">
+                <div>
+                    <div class="sensor-name">{{ sensor.name or 'Unknown Sensor' }}</div>
+                    <div class="sensor-location">
+                        📍 {{ sensor.location.replace('_', ' ').title() if sensor.location else 'Unknown' }}
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="sensor-temp">{{ sensor.value|round(1) if sensor.value else '0.0' }}°C</span>
+                    <span style="font-size: 12px; color: #666;">{{ sensor.unit or '°C' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-data">
+                📡 No sensor data available. Check if Sensor Service is running.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Location Summaries - БЕЗ ИЗМЕНЕНИЙ -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">📋 Location Summaries</span>
+        </div>
+        <div class="summary-grid" id="summariesGrid">
+            {% if data and data.summaries %}
+            {% for location, summary in data.summaries.items() %}
+            <div class="summary-card">
+                <div class="summary-location">
+                    {{ location.replace('_', ' ').title() }}
+                </div>
+                <div class="summary-temp">
+                    {{ summary.average_temperature|round(1) if summary.average_temperature else '--' }}°C
+                </div>
+                <div class="summary-range">
+                    Min: {{ summary.min_temperature|round(1) if summary.min_temperature else '--' }}°<br>
+                    Max: {{ summary.max_temperature|round(1) if summary.max_temperature else '--' }}°
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-data" style="grid-column: 1/-1;">
+                📊 No summary data available
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="footer">
+        Smart Home Dashboard • Auto-refresh every 5s •
+        <span id="refreshCounter">5</span>s
+    </div>
+</div>
+
+<script>
+    let refreshInterval = 5;
+    let countdown = refreshInterval;
+
+    // Обновление данных
+    async function refreshData() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '🔄 Updating...';
+
+        try {
+            const response = await fetch('/api/data');
+            const data = await response.json();
+
+            // Обновляем таймстамп
+            document.getElementById('timestamp').innerHTML = `Last updated: ${data.timestamp || new Date().toISOString()}`;
+
+            // ========== ОБНОВЛЕНИЕ TEMPERATURE API ==========
+            if (data.services?.temperature_api) {
+                const tempApi = data.services.temperature_api;
+
+                // Статус
+                document.getElementById('tempApiStatus').className = `status ${tempApi.healthy ? 'online' : 'offline'}`;
+                document.getElementById('tempApiStatus').innerHTML = tempApi.healthy ? 'Online' : 'Offline';
+
+                // ID сервиса
+                document.getElementById('tempApiId').innerHTML = tempApi.info?.service_id || 'temperature-api-1';
+
+                // Количество показаний
+                document.getElementById('tempApiReadings').innerHTML = tempApi.readings_count || 0;
+
+                // Обновляем список датчиков по ID
+                updateTemperatureApiSensors(tempApi.readings || []);
+
+                // Обновляем список показаний по локациям
+                updateTemperatureApiLocations(tempApi.readings || []);
+            }
+
+            // ========== ОБНОВЛЕНИЕ SENSOR SERVICE - БЕЗ ИЗМЕНЕНИЙ ==========
+            if (data.services?.sensor_service) {
+                const sensorService = data.services.sensor_service;
+                document.getElementById('sensorServiceStatus').className = `status ${sensorService.healthy ? 'online' : 'offline'}`;
+                document.getElementById('sensorServiceStatus').innerHTML = sensorService.healthy ? 'Online' : 'Offline';
+                document.getElementById('sensorServiceId').innerHTML = sensorService.info?.service_id || 'N/A';
+                document.getElementById('sensorTotal').innerHTML = sensorService.sensor_count || 0;
+                document.getElementById('sensorCount').innerHTML = `${sensorService.sensor_count || 0} active`;
+
+                // Обновляем список датчиков
+                updateSensorsList(sensorService.sensors || []);
+            }
+
+            // ========== ОБНОВЛЕНИЕ HEATING DEVICE - БЕЗ ИЗМЕНЕНИЙ ==========
+            if (data.services?.heating_device) {
+                const heating = data.services.heating_device;
+                document.getElementById('heatingStatus').className = `status ${heating.healthy ? 'online' : 'offline'}`;
+                document.getElementById('heatingStatus').innerHTML = heating.healthy ? 'Online' : 'Offline';
+                document.getElementById('heatingDeviceId').innerHTML = heating.info?.device_id || 'N/A';
+                document.getElementById('heatingPower').innerHTML = heating.status?.is_on ? 'ON' : 'OFF';
+                document.getElementById('heatingMode').innerHTML = heating.info?.mode || 'N/A';
+                document.getElementById('heatingTemp').innerHTML = heating.temperature?.temperature ? `${heating.temperature.temperature}°C` : '--';
+            }
+
+            // Обновляем сводки - БЕЗ ИЗМЕНЕНИЙ
+            if (data.summaries) {
+                updateSummaries(data.summaries);
+            }
+
+            hideError();
+
+        } catch (error) {
+            console.error('Refresh failed:', error);
+            showError('Failed to fetch data from services');
+        } finally {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '🔄 Refresh';
+            countdown = refreshInterval;
+        }
+    }
+
+    // ========== НОВАЯ ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ ДАТЧИКОВ TEMPERATURE API ==========
+    function updateTemperatureApiSensors(readings) {
+        const sensorList = document.getElementById('tempApiSensorList');
+
+        if (!readings || readings.length === 0) {
+            sensorList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No sensor readings available</div>';
+            return;
+        }
+
+        // Фильтруем датчики по ID (1, 2, 3)
+        const sensorReadings = readings.filter(r => ['1', '2', '3'].includes(r.sensor_id));
+
+        if (sensorReadings.length === 0) {
+            sensorList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No sensor readings available</div>';
+            return;
+        }
+
+        let html = '';
+        sensorReadings.forEach(reading => {
+            const timestamp = reading.timestamp ? new Date(reading.timestamp).toLocaleString() : 'N/A';
+            const description = reading.description || `Temperature sensor in ${reading.location}`;
+
+            html += `
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <span class="sensor-id">Sensor #${reading.sensor_id}</span>
+                        <span style="font-size: 12px; color: #666;">${reading.location || 'Unknown'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="sensor-value-large">${reading.value ? reading.value.toFixed(1) : '0.0'}°C</span>
+                        <span style="font-size: 12px; color: #666;">
+                            ${timestamp}
+                        </span>
+                    </div>
+                    <div class="sensor-desc">
+                        ${description}
+                    </div>
+                </div>
+            `;
+        });
+
+        sensorList.innerHTML = html;
+    }
+
+    // ========== НОВАЯ ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ ПОКАЗАНИЙ ПО ЛОКАЦИЯМ ==========
+    function updateTemperatureApiLocations(readings) {
+        const locationList = document.getElementById('tempApiLocationList');
+
+        if (!readings || readings.length === 0) {
+            locationList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No location readings available</div>';
+            return;
+        }
+
+        // Фильтруем показания по локациям (исключаем датчики по ID)
+        const locationReadings = readings.filter(r =>
+            ['Living Room', 'Bedroom', 'Kitchen'].includes(r.location) &&
+            !['1', '2', '3'].includes(r.sensor_id)
+        );
+
+        if (locationReadings.length === 0) {
+            locationList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No location readings available</div>';
+            return;
+        }
+
+        let html = '';
+        locationReadings.forEach(reading => {
+            const timestamp = reading.timestamp ? new Date(reading.timestamp).toLocaleTimeString() : 'N/A';
+
+            html += `
+                <div class="sensor-item">
+                    <div>
+                        <div class="sensor-name">${reading.location}</div>
+                        <div class="sensor-location">
+                            🆔 Sensor: ${reading.sensor_id}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="sensor-temp">${reading.value ? reading.value.toFixed(1) : '0.0'}°C</span>
+                        <span style="font-size: 11px; color: #666;">
+                            ${timestamp}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+
+        locationList.innerHTML = html;
+    }
+
+    // Обновление списка датчиков - БЕЗ ИЗМЕНЕНИЙ
+    function updateSensorsList(sensors) {
+        const sensorList = document.getElementById('sensorList');
+
+        if (!sensors || sensors.length === 0) {
+            sensorList.innerHTML = '<div class="no-data">📡 No sensor data available</div>';
+            return;
+        }
+
+        let html = '';
+        sensors.slice(0, 10).forEach(sensor => {
+            const location = sensor.location ? sensor.location.replace('_', ' ').title() : 'Unknown';
+            const temp = sensor.value ? sensor.value.toFixed(1) : '0.0';
+
+            html += `
+                <div class="sensor-item">
+                    <div>
+                        <div class="sensor-name">${sensor.name || 'Unknown Sensor'}</div>
+                        <div class="sensor-location">📍 ${location}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="sensor-temp">${temp}°C</span>
+                        <span style="font-size: 12px; color: #666;">${sensor.unit || '°C'}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        sensorList.innerHTML = html;
+    }
+
+    // Обновление сводок - БЕЗ ИЗМЕНЕНИЙ
+    function updateSummaries(summaries) {
+        const grid = document.getElementById('summariesGrid');
+
+        if (!summaries || Object.keys(summaries).length === 0) {
+            grid.innerHTML = '<div class="no-data" style="grid-column: 1/-1;">📊 No summary data available</div>';
+            return;
+        }
+
+        let html = '';
+        for (const [location, summary] of Object.entries(summaries)) {
+            const avgTemp = summary.average_temperature ? summary.average_temperature.toFixed(1) : '--';
+            const minTemp = summary.min_temperature ? summary.min_temperature.toFixed(1) : '--';
+            const maxTemp = summary.max_temperature ? summary.max_temperature.toFixed(1) : '--';
+
+            html += `
+                <div class="summary-card">
+                    <div class="summary-location">${location.replace('_', ' ').title()}</div>
+                    <div class="summary-temp">${avgTemp}°C</div>
+                    <div class="summary-range">
+                        Min: ${minTemp}°<br>
+                        Max: ${maxTemp}°
+                    </div>
+                </div>
+            `;
+        }
+
+        grid.innerHTML = html;
+    }
+
+    // String.prototype.title полифилл - БЕЗ ИЗМЕНЕНИЙ
+    if (!String.prototype.title) {
+        String.prototype.title = function() {
+            return this.replace(/\w\S*/g, function(txt) {
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        };
+    }
+
+    // Показать ошибку - БЕЗ ИЗМЕНЕНИЙ
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = `⚠️ ${message}`;
+    }
+
+    // Скрыть ошибку - БЕЗ ИЗМЕНЕНИЙ
+    function hideError() {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'none';
+    }
+
+    // Ручное обновление - БЕЗ ИЗМЕНЕНИЙ
+    function manualRefresh() {
+        refreshData();
+    }
+
+    // Таймер обратного отсчета - БЕЗ ИЗМЕНЕНИЙ
+    function updateCounter() {
+        const counter = document.getElementById('refreshCounter');
+        if (counter) {
+            counter.textContent = countdown;
+        }
+        countdown--;
+        if (countdown < 0) {
+            countdown = refreshInterval;
+        }
+    }
+
+    // Инициализация - БЕЗ ИЗМЕНЕНИЙ
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Dashboard initialized');
+
+        // Запускаем первое обновление
+        refreshData();
+
+        // Устанавливаем интервалы
+        setInterval(refreshData, refreshInterval * 1000);
+        setInterval(updateCounter, 1000);
+    });
+</script>
+</body>
+</html>

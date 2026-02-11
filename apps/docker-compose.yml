@@ -1,22 +1,27 @@
 #version: '3.8'
+
 services:
+
+
+
+
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: smarthome-postgres
-    env_file: .env
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: smarthome
     ports:
-      - "5433:5432"  # внутренний порт postgres по умолчанию 5432
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - smarthome-network
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,11 +33,35 @@ services:
     container_name: temperature-api
     ports:
       - "8081:8081"
-    #    environment:
+    environment:
+      - TZ=Europe/Moscow
     #      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/orders
     networks:
       - smarthome-network
 
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+
+
+#  app:
+#    build: ./smart_home
+#    container_name: smart-home-app
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
+#      - TEMPERATURE_API_URL=http://temperature-api:8081
+      ##- SENSOR_SERVICE_URL=http://sensor-service:8082
+#    networks:
+#      - smarthome-network
+#    depends_on:
+#      - postgres
+#      - temperature-api
 
   app:
     build:
@@ -43,20 +72,76 @@ services:
       postgres:
         condition: service_healthy
       temperature-api:
-
         condition: service_started
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
       - TEMPERATURE_API_URL=http://temperature-api:8081
+      - SENSOR_SERVICE_URL=http://sensor-service:8082
+      - HEATING_DEVICE_URL=http://heating-device-service:8083
     ports:
       - "8080:8080"
     restart: unless-stopped
     networks:
       - smarthome-network
 
+
+  # Java Sensor Service
+  sensor-service:
+    build: ./warmhouse/temperature-sensor-service
+    container_name: temperature-sensor-service
+    ports:
+      - "8082:8082"
+    environment:
+      - TZ=Europe/Moscow
+    networks:
+      - smarthome-network
+
+
+  # Python Heating Service
+  heating-device-service:
+    build: ./warmhouse/heating-device-service
+    container_name: heating-device-service
+    ports:
+      - "8083:8083"
+    networks:
+      - smarthome-network
+    environment:
+      - TZ=Europe/Moscow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+#  sensor-dashboard:
+#    build: ./sensor-dashboard
+#    container_name: sensor-dashboard
+#    ports:
+#      - "8084:8084"
+#    environment:
+#      - SENSOR_SERVICE_URL=http://sensor-service:8082
+#      - POLL_INTERVAL=10
+#    networks:
+#      - smarthome-network
+#    depends_on:
+#      - sensor-service
+
+  simple-dashboard:
+    build: ./warmhouse/simple-dashboard
+    container_name: smart-home-dashboard-simple
+    ports:
+      - "8085:8085"
+    networks:
+      - smarthome-network
+    depends_on:
+      - temperature-api
+      - sensor-service
+      - heating-device-service
+
+
 volumes:
   postgres_data:
-
+  rabbitmq_data:
 
 networks:
   smarthome-network:
